@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Protocol.Core.Types;
 using ReactiveUI;
@@ -103,16 +104,17 @@ namespace LearnReactiveUI.ViewModels
         // extract such code into a separate service, say, INuGetSearchService, but let's 
         // try to avoid overcomplicating things at this time.
         private async Task<IEnumerable<NugetDetailsViewModel>> SearchNuGetPackages(
-            string term, CancellationToken token)
+        string term, CancellationToken token)
         {
             var providers = new List<Lazy<INuGetResourceProvider>>();
             providers.AddRange(Repository.Provider.GetCoreV3()); // Add v3 API support
             var packageSource = new PackageSource("https://api.nuget.org/v3/index.json");
             var source = new SourceRepository(packageSource, providers);
+            var logger = NullLogger.Instance;
 
             var filter = new SearchFilter(false);
             var resource = await source.GetResourceAsync<PackageSearchResource>().ConfigureAwait(false);
-            var metadata = await resource.SearchAsync(term, filter, 0, 10, null, token).ConfigureAwait(false);
+            var metadata = await resource.SearchAsync(term, filter, 0, 10, logger, token).ConfigureAwait(false);
             return metadata.Select(x => new NugetDetailsViewModel(x));
         }
     }
